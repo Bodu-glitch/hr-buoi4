@@ -1,0 +1,13 @@
+import {cp,mkdir,readFile} from 'node:fs/promises';
+import {resolve,sep} from 'node:path';import {fileURLToPath} from 'node:url';
+const data=fileURLToPath(new URL('../../data/',import.meta.url)),stamp=new Date().toISOString().replace(/[:.]/g,'-');
+const restore=process.argv.indexOf('--phuc-hoi');
+const source=restore>=0?resolve(process.argv[restore+1]||''):resolve(data,'hr1-buoi4');
+if(restore>=0&&!source.startsWith(resolve(data,'backup')+sep))throw Error('Chỉ phục hồi từ data/backup/.');
+const marker=JSON.parse(await readFile(resolve(source,'B4_MAU.json'),'utf8'));if(marker.kind!=='HR1-B4-v1')throw Error('Không phải kho mẫu B4.');
+const target=resolve(data,restore>=0?'b4-phuc-hoi-'+stamp:'backup/b4-'+stamp);
+await mkdir(resolve(data,'backup'),{recursive:true});
+await cp(source,target,{recursive:true,errorOnExist:true,force:false});
+console.log((restore>=0?'Kho phục hồi mới: ':'Bản sao: ')+target);
+if(restore>=0)console.log('Chạy: node src/cong_cu/b4_trai_nghiem.mjs --kho "'+target+'"');
+console.log('Giữ nguyên kho cũ. Bản sao cùng ổ không thay sao lưu chống mất máy.');
