@@ -1,7 +1,17 @@
-import { readFileSync } from 'node:fs';
+let fsPromises = null;
 
-const base = new URL('../../docs/3_NAO_AI/', import.meta.url);
+function getBase() {
+  try {
+    return new URL('../../docs/3_NAO_AI/', import.meta.url);
+  } catch {
+    return null;
+  }
+}
+
 function layKhoi(file, pointer) {
+  const base = getBase();
+  if (!base) throw new Error('KHONG_THE_XAC_DINH_THU_MUC_DOCS');
+  const { readFileSync } = require('node:fs');
   const md = readFileSync(new URL(file, base), 'utf8').replace(/\r\n/g, '\n');
   const blocks = [...md.matchAll(/<!-- NGUON_JSON: (\[[^\n]+\]) -->\n(~{4,})text\n([\s\S]*?)\n\2(?:\n|$)/g)];
   const match = blocks.find(m => JSON.parse(m[1]).includes(pointer));

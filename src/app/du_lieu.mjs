@@ -8,8 +8,16 @@ async function getFs() {
   return fsModule;
 }
 
-export const dataRoot = new URL('../../data/ung_dung/', import.meta.url);
-export function taoKho(root = dataRoot) {
+export function getDataRoot() {
+  try {
+    return new URL('../../data/ung_dung/', import.meta.url);
+  } catch {
+    return null;
+  }
+}
+export const dataRoot = null;
+export function taoKho(root) {
+  root = root || getDataRoot();
   let writing = false;
   return { root, async list() {
     const { mkdir, readdir } = await getFs();

@@ -1,5 +1,4 @@
 import {createHash} from 'node:crypto';
-import {chonMuc} from '../../thu_nghiem/ai05/nguon.mjs';
 import {precomputed} from './nguon_ai_embedded.mjs';
 export const tasks={
  AI02:{folder:'AI02_JD_TIN_DANG',index:0,company:[1,2,5,7,8],policy:[1,2,3,4,5,7,13,14]},
