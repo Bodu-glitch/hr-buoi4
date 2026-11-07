@@ -38,67 +38,67 @@ function getWorkflow(env) {
 }
 
 export async function onRequest(context) {
-  const { request, env } = context;
-  const url = new URL(request.url);
-
-  if (request.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Cookie',
-        'Access-Control-Allow-Credentials': 'true'
-      }
-    });
-  }
-
-  const api = getWorkflow(env);
-
-  const reqHeaders = {};
-  for (const [k, v] of request.headers.entries()) {
-    reqHeaders[k.toLowerCase()] = v;
-  }
-  reqHeaders.cookie = request.headers.get('cookie') || '';
-
-  const req = {
-    url: url.pathname + url.search,
-    method: request.method,
-    headers: reqHeaders
-  };
-
-  let responseStatus = 200;
-  const responseHeaders = new Headers();
-  responseHeaders.set('Cache-Control', 'no-store');
-  responseHeaders.set('X-Content-Type-Options', 'nosniff');
-
-  let responseBody = '';
-
-  const res = {
-    setHeader(name, value) {
-      if (name.toLowerCase() === 'set-cookie') {
-        responseHeaders.append('Set-Cookie', value);
-      } else {
-        responseHeaders.set(name, value);
-      }
-    }
-  };
-
-  const json = (status, data) => {
-    responseStatus = status;
-    responseBody = JSON.stringify(data);
-    responseHeaders.set('Content-Type', 'application/json; charset=utf-8');
-  };
-
-  const body = async () => {
-    try {
-      return await request.json();
-    } catch {
-      throw Object.assign(new Error('Dữ liệu không hợp lệ.'), { status: 400 });
-    }
-  };
-
   try {
+    const { request, env } = context;
+    const url = new URL(request.url);
+
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Cookie',
+          'Access-Control-Allow-Credentials': 'true'
+        }
+      });
+    }
+
+    const api = getWorkflow(env);
+
+    const reqHeaders = {};
+    for (const [k, v] of request.headers.entries()) {
+      reqHeaders[k.toLowerCase()] = v;
+    }
+    reqHeaders.cookie = request.headers.get('cookie') || '';
+
+    const req = {
+      url: url.pathname + url.search,
+      method: request.method,
+      headers: reqHeaders
+    };
+
+    let responseStatus = 200;
+    const responseHeaders = new Headers();
+    responseHeaders.set('Cache-Control', 'no-store');
+    responseHeaders.set('X-Content-Type-Options', 'nosniff');
+
+    let responseBody = '';
+
+    const res = {
+      setHeader(name, value) {
+        if (name.toLowerCase() === 'set-cookie') {
+          responseHeaders.append('Set-Cookie', value);
+        } else {
+          responseHeaders.set(name, value);
+        }
+      }
+    };
+
+    const json = (status, data) => {
+      responseStatus = status;
+      responseBody = JSON.stringify(data);
+      responseHeaders.set('Content-Type', 'application/json; charset=utf-8');
+    };
+
+    const body = async () => {
+      try {
+        return await request.json();
+      } catch {
+        throw Object.assign(new Error('Dữ liệu không hợp lệ.'), { status: 400 });
+      }
+    };
+
     const handled = await api.handle(req, res, json, body);
     if (!handled) {
       return new Response(JSON.stringify({ error: 'Endpoint không tồn tại.' }), {
@@ -111,7 +111,11 @@ export async function onRequest(context) {
       headers: responseHeaders
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message || 'Lỗi xử lý yêu cầu.' }), {
+    return new Response(JSON.stringify({
+      error: err.message || 'Lỗi xử lý yêu cầu.',
+      stack: err.stack || '',
+      status: err.status || 500
+    }), {
       status: err.status || 500,
       headers: { 'Content-Type': 'application/json; charset=utf-8' }
     });

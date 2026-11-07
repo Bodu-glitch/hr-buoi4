@@ -20,18 +20,19 @@ export function project(s,u){
  }
  out.jobs=out.jobs.map(j=>({id:j.id,code:j.code,position:j.position}));out.candidates=out.candidates.filter(c=>c.tasks.some(t=>u.roles.includes(t.role))).map(c=>({id:c.id,name:c.name,code:c.code,jobId:c.jobId,status:c.status,start:c.terms?.start,location:c.terms?.location,tasks:c.tasks.filter(t=>u.roles.includes(t.role)),arrival:c.arrival}));out.events=out.events.filter(e=>e.actor===u.id);out.aiCalls=[];return out;
 }
-export function createWorkflowAPI({root=new URL('../../data/quy_trinh/',import.meta.url),config,runAI,extraHandler,cookieName='hr_auth',governanceDecision,demoMode=false,demoLogins=[],b4Mode=false,supabaseConfig}={}){
+export function createWorkflowAPI({root=null,config,runAI,extraHandler,cookieName='hr_auth',governanceDecision,demoMode=false,demoLogins=[],b4Mode=false,supabaseConfig}={}){
  const useSupabase = Boolean(supabaseConfig?.supabaseUrl && supabaseConfig?.supabaseKey);
+ const safeRoot = root || (useSupabase ? null : new URL('../../data/quy_trinh/', import.meta.url));
  const identity = useSupabase
   ? authSupabase({ supabaseUrl: supabaseConfig.supabaseUrl, supabaseKey: supabaseConfig.supabaseKey, cookieName })
-  : auth(root, { cookieName });
+  : auth(safeRoot, { cookieName });
  const customStore = useSupabase
   ? taoKhoSupabase({ supabaseUrl: supabaseConfig.supabaseUrl, supabaseKey: supabaseConfig.supabaseKey })
   : null;
  const engine = createWorkspace({
   b4Mode,
   store: customStore,
-  root: new URL('workspace/', root),
+  root: safeRoot ? new URL('workspace/', safeRoot) : null,
   config,
   runAI,
   loadUsers: () => identity.directory(),
